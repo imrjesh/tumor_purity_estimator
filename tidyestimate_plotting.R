@@ -49,3 +49,40 @@ cat("\nSaved plots:\n",
     out_purity_pdf, "\n", out_purity_png, "\n",
     out_scatter_pdf, "\n", out_scatter_png, "\n",
     out_est_pdf, "\n", out_est_png, "\n")
+
+
+############## Plotting for Tumor Purity and Estimate Score ###########
+library(tidyverse)
+
+infile <- "/path/tidyestimate_scores.tsv"
+
+df <- read.delim(infile, sep = "\t", check.names = FALSE)
+
+# Ensure numeric
+df <- df %>%
+  mutate(
+    estimate = as.numeric(estimate),
+    purity   = as.numeric(purity),
+    MLIVER   = as.character(MLIVER)
+  )
+
+# Color mapping: Y (LiverMet) red, N black
+df <- df %>%
+  mutate(color = ifelse(MLIVER == "Y", "LiverMet (Y)", "NonLiverMet (N)"))
+
+p <- ggplot(df, aes(x = estimate, y = purity, color = color)) +
+  geom_point(alpha = 0.8, size = 2) +
+  geom_smooth(method = "loess", se = FALSE, color = "grey40") +
+  theme_classic() +
+  labs(
+    x = "ESTIMATE score",
+    y = "Tumor purity",
+    color = ""
+  ) +
+  scale_color_manual(values = c("NonLiverMet (N)" = "black", "LiverMet (Y)" = "red"))
+
+print(p)
+
+# Save (optional)
+ggsave("/path/purity_vs_ESTIMATE_MLIVER_color.pdf",
+       p, width = 6, height = 5)
